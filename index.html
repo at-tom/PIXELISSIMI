@@ -939,17 +939,18 @@
 
         // Importazione dinamica dai CDN
         const { FFmpeg } = await import('https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/esm/index.js');
-        const { fetchFile } = await import('https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js');
+        // Aggiungiamo toBlobURL per aggirare il blocco CORS sui Worker
+        const { fetchFile, toBlobURL } = await import('https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js');
 
         const ffmpeg = new FFmpeg();
 
-        // Su browser, FFmpeg richiede i percorsi espliciti per il core
+        // Scarichiamo i file come Blob locali per non far arrabbiare il browser
         const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
         await ffmpeg.load({
-          coreURL: await fetchFile(`${baseURL}/ffmpeg-core.js`),
-          wasmURL: await fetchFile(`${baseURL}/ffmpeg-core.wasm`),
+          coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+          wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+          workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript')
         });
-
         btn.innerHTML = '<span>● Registrazione in corso...</span>';
 
         // Assicurati che l'animazione sia attiva per registrare qualcosa di dinamico
