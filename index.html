@@ -1,677 +1,1033 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PIXELISSIMI - Video Export</title>
-<style>
-  :root {
-    --bg: #0a0a0a;
-    --surface: #111;
-    --border: #2a2a2a;
-    --accent: #D62F2F;
-    --accent-glow: rgba(214,47,47,0.35);
-    --text: #f0f0f0;
-    --muted: #555;
-    --panel: #0f0f0f;
-    --font: Helvetica, Arial, sans-serif;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PIXELISSIMI - Video Export</title>
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  <script src="coi-serviceworker.js"></script>
 
-  html, body {
-    height: 100%;
-    overflow: hidden;
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font);
-  }
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111;
+      --border: #2a2a2a;
+      --accent: #D62F2F;
+      --accent-glow: rgba(214, 47, 47, 0.35);
+      --text: #f0f0f0;
+      --muted: #555;
+      --panel: #0f0f0f;
+      --font: Helvetica, Arial, sans-serif;
+    }
 
-  body { display: flex; flex-direction: column; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-  /* HEADER */
-  header {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 9px 22px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-  }
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+    }
 
-  .logo {
-    font-weight: 700;
-    font-size: 1.4rem;
-    letter-spacing: 6px;
-    color: var(--accent);
-    text-shadow: 0 0 18px var(--accent-glow);
-    line-height: 1.1;
-    text-transform: uppercase;
-  }
-  .logo span {
-    color: var(--muted);
-    font-size: 0.55rem;
-    display: block;
-    letter-spacing: 3px;
-    font-weight: 400;
-    margin-top: 2px;
-    text-transform: uppercase;
-  }
+    body {
+      display: flex;
+      flex-direction: column;
+    }
 
-  .header-right { display: flex; gap: 18px; align-items: center; }
+    /* HEADER */
+    header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 22px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
 
-  .animate-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 0.55rem; letter-spacing: 2px; color: #ff6b3d;
-    text-transform: uppercase; opacity: 0; transition: opacity 0.3s;
-  }
-  .animate-badge.visible { opacity: 1; }
-  .animate-badge::before {
-    content:''; width:5px; height:5px; background:#ff6b3d;
-    border-radius:50%; animation: pulse 1s infinite;
-  }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.6)} }
+    .logo {
+      font-weight: 700;
+      font-size: 1.4rem;
+      letter-spacing: 6px;
+      color: var(--accent);
+      text-shadow: 0 0 18px var(--accent-glow);
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
 
-  .seed-display {
-    font-size:0.55rem; color:var(--muted); letter-spacing:2px;
-    text-transform:uppercase; line-height:1.6; text-align:right;
-  }
-  .seed-display strong { color:var(--accent); display:block; font-size:0.8rem; }
+    .logo span {
+      color: var(--muted);
+      font-size: 0.55rem;
+      display: block;
+      letter-spacing: 3px;
+      font-weight: 400;
+      margin-top: 2px;
+      text-transform: uppercase;
+    }
 
-  /* MAIN */
-  main { flex:1; display:flex; overflow:hidden; min-height:0; }
+    .header-right {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+    }
 
-  /* SIDEBAR */
-  aside {
-    width: 220px; min-width: 220px; flex-shrink: 0;
-    background: var(--panel); border-right: 1px solid var(--border);
-    padding: 10px 12px; display: flex; flex-direction: column;
-    gap: 8px; overflow-y: auto; overflow-x: hidden;
-  }
-  aside::-webkit-scrollbar { width: 3px; }
-  aside::-webkit-scrollbar-thumb { background: var(--border); }
+    .animate-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.55rem;
+      letter-spacing: 2px;
+      color: #ff6b3d;
+      text-transform: uppercase;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
 
-  .section-label {
-    font-size: 0.5rem; letter-spacing: 3px; text-transform: uppercase;
-    color: var(--muted); margin-bottom: 5px; border-bottom: 1px solid var(--border);
-    padding-bottom: 3px; font-weight: 700;
-  }
+    .animate-badge.visible {
+      opacity: 1;
+    }
 
-  .sblock { display: flex; flex-direction: column; gap: 5px; }
+    .animate-badge::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      background: #ff6b3d;
+      border-radius: 50%;
+      animation: pulse 1s infinite;
+    }
 
-  /* SLIDERS */
-  .cg { display: flex; flex-direction: column; gap: 3px; }
-  .cg label {
-    font-size: 0.54rem; letter-spacing: 1px; text-transform: uppercase;
-    color: var(--muted); display: flex; justify-content: space-between;
-  }
-  .cg label span { color: var(--accent); font-size: 0.7rem; }
-  input[type=range] {
-    width: 100%; appearance: none; height: 2px;
-    background: var(--border); outline: none; cursor: pointer;
-  }
-  input[type=range]::-webkit-slider-thumb {
-    appearance: none; width: 9px; height: 9px;
-    background: var(--accent); cursor: pointer;
-    box-shadow: 0 0 5px var(--accent-glow);
-  }
+    @keyframes pulse {
 
-  /* BUTTONS */
-  .btn {
-    padding: 6px 10px; font-family: var(--font); font-size: 0.57rem;
-    letter-spacing: 2px; text-transform: uppercase; font-weight: 700;
-    cursor: pointer; border: 1px solid var(--border); background: transparent;
-    color: var(--text); transition: all .15s; width: 100%;
-    position: relative; overflow: hidden;
-  }
-  .btn::before {
-    content:''; position:absolute; inset:0; background:var(--accent);
-    transform:translateX(-100%); transition:transform .2s; z-index:0;
-  }
-  .btn:hover::before { transform:translateX(0); }
-  .btn:hover { color:#fff; border-color:var(--accent); }
-  .btn span { position:relative; z-index:1; }
-  .btn-primary { border-color:var(--accent); color:var(--accent); }
-  .btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
-  .bg2 { display:grid; grid-template-columns:1fr 1fr; gap:4px; }
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1)
+      }
 
-  /* PILLS */
-  .pill {
-    padding: 4px 7px; font-size: 0.52rem; letter-spacing: 1px;
-    text-transform: uppercase; cursor: pointer; border: 1px solid var(--border);
-    background: transparent; color: var(--muted); transition: all .15s;
-    font-family: var(--font); font-weight: 700; text-align: left;
-    display: flex; align-items: center; gap: 5px;
-  }
-  .pill::before { content:''; width:4px; height:4px; background:var(--border); flex-shrink:0; transition:background .15s; }
-  .pill:hover { color:var(--text); border-color:var(--muted); }
-  .pill.active { color:var(--accent); border-color:var(--accent); }
-  .pill.active::before { background:var(--accent); }
+      50% {
+        opacity: .4;
+        transform: scale(.6)
+      }
+    }
 
-  /* INPUTS */
-  input[type=number], input[type=text] {
-    background:var(--surface); border:1px solid var(--border);
-    color:var(--text); padding:4px 6px; font-family:var(--font);
-    font-size:0.65rem; outline:none; width:100%;
-  }
-  input[type=number]:focus, input[type=text]:focus { border-color:var(--accent); }
+    .seed-display {
+      font-size: 0.55rem;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      line-height: 1.6;
+      text-align: right;
+    }
 
-  .color-row { display:flex; gap:4px; align-items:center; }
-  .color-row input[type=color] {
-    width:28px; min-width:28px; height:26px; padding:1px;
-    border:1px solid var(--border); background:none; cursor:pointer; flex-shrink:0;
-  }
-  .color-row input[type=text] { flex:1; color:var(--accent); }
+    .seed-display strong {
+      color: var(--accent);
+      display: block;
+      font-size: 0.8rem;
+    }
 
-  /* CANVAS AREA */
-  .canvas-wrap {
-    flex:1; display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
-    padding:14px; gap:8px; overflow:hidden; min-width:0;
-    background:
-      radial-gradient(ellipse at 15% 85%, rgba(214,47,47,0.05) 0%, transparent 55%),
-      radial-gradient(ellipse at 85% 15%, rgba(214,47,47,0.03) 0%, transparent 55%),
-      var(--bg);
-  }
+    /* MAIN */
+    main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-height: 0;
+    }
 
-  .canvas-container {
-    position:relative;
-    box-shadow: 0 0 0 1px var(--border), 0 0 28px rgba(0,0,0,.8), 0 0 55px rgba(214,47,47,.05);
-    transition: box-shadow .3s;
-    background-image:
-      linear-gradient(45deg,#1a1a1a 25%,transparent 25%),
-      linear-gradient(-45deg,#1a1a1a 25%,transparent 25%),
-      linear-gradient(45deg,transparent 75%,#1a1a1a 75%),
-      linear-gradient(-45deg,transparent 75%,#1a1a1a 75%);
-    background-size:14px 14px;
-    background-position:0 0,0 7px,7px -7px,-7px 0;
-    background-color:#111;
-  }
-  .canvas-container:hover {
-    box-shadow: 0 0 0 1px var(--accent), 0 0 28px rgba(0,0,0,.8), 0 0 55px rgba(214,47,47,.14);
-  }
+    /* SIDEBAR */
+    aside {
+      width: 220px;
+      min-width: 220px;
+      flex-shrink: 0;
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
 
-  canvas { display:block; image-rendering:pixelated; }
+    aside::-webkit-scrollbar {
+      width: 3px;
+    }
 
-  .hint {
-    font-size:0.5rem; color:var(--muted); letter-spacing:1px;
-    text-align:center; flex-shrink:0;
-  }
-  .kbd {
-    display:inline-block; background:var(--border); color:var(--muted);
-    padding:1px 4px; font-size:0.5rem; border-radius:2px;
-  }
+    aside::-webkit-scrollbar-thumb {
+      background: var(--border);
+    }
 
-  /* STATUS BAR */
-  .statusbar {
-    flex-shrink:0; display:flex; gap:18px;
-    font-size:0.5rem; letter-spacing:2px; color:var(--muted);
-    text-transform:uppercase; padding:5px 22px;
-    border-top:1px solid var(--border); background:var(--surface); font-weight:700;
-  }
-  .statusbar .stat { display:flex; gap:5px; align-items:center; }
-  .statusbar .stat strong { color:var(--accent); }
+    .section-label {
+      font-size: 0.5rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 5px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 3px;
+      font-weight: 700;
+    }
 
-  /* HISTORY */
-  .history-strip { display:flex; gap:3px; flex-wrap:wrap; }
-  .history-thumb {
-    width:28px; height:28px; cursor:pointer;
-    border:1px solid var(--border); transition:border-color .15s;
-    image-rendering:pixelated; flex-shrink:0;
-  }
-  .history-thumb:hover { border-color:var(--accent); }
+    .sblock {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
 
-  @keyframes flash { 0%{opacity:1} 50%{opacity:.2} 100%{opacity:1} }
-  .flash { animation:flash .18s ease; }
-</style>
+    /* SLIDERS */
+    .cg {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .cg label {
+      font-size: 0.54rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .cg label span {
+      color: var(--accent);
+      font-size: 0.7rem;
+    }
+
+    input[type=range] {
+      width: 100%;
+      appearance: none;
+      height: 2px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      appearance: none;
+      width: 9px;
+      height: 9px;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 0 5px var(--accent-glow);
+    }
+
+    /* BUTTONS */
+    .btn {
+      padding: 6px 10px;
+      font-family: var(--font);
+      font-size: 0.57rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      transition: all .15s;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--accent);
+      transform: translateX(-100%);
+      transition: transform .2s;
+      z-index: 0;
+    }
+
+    .btn:hover::before {
+      transform: translateX(0);
+    }
+
+    .btn:hover {
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .btn-primary {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .bg2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px;
+    }
+
+    /* PILLS */
+    .pill {
+      padding: 4px 7px;
+      font-size: 0.52rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      transition: all .15s;
+      font-family: var(--font);
+      font-weight: 700;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .pill::before {
+      content: '';
+      width: 4px;
+      height: 4px;
+      background: var(--border);
+      flex-shrink: 0;
+      transition: background .15s;
+    }
+
+    .pill:hover {
+      color: var(--text);
+      border-color: var(--muted);
+    }
+
+    .pill.active {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .pill.active::before {
+      background: var(--accent);
+    }
+
+    /* INPUTS */
+    input[type=number],
+    input[type=text] {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 4px 6px;
+      font-family: var(--font);
+      font-size: 0.65rem;
+      outline: none;
+      width: 100%;
+    }
+
+    input[type=number]:focus,
+    input[type=text]:focus {
+      border-color: var(--accent);
+    }
+
+    .color-row {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .color-row input[type=color] {
+      width: 28px;
+      min-width: 28px;
+      height: 26px;
+      padding: 1px;
+      border: 1px solid var(--border);
+      background: none;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .color-row input[type=text] {
+      flex: 1;
+      color: var(--accent);
+    }
+
+    /* CANVAS AREA */
+    .canvas-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      gap: 8px;
+      overflow: hidden;
+      min-width: 0;
+      background:
+        radial-gradient(ellipse at 15% 85%, rgba(214, 47, 47, 0.05) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 15%, rgba(214, 47, 47, 0.03) 0%, transparent 55%),
+        var(--bg);
+    }
+
+    .canvas-container {
+      position: relative;
+      box-shadow: 0 0 0 1px var(--border), 0 0 28px rgba(0, 0, 0, .8), 0 0 55px rgba(214, 47, 47, .05);
+      transition: box-shadow .3s;
+      background-image:
+        linear-gradient(45deg, #1a1a1a 25%, transparent 25%),
+        linear-gradient(-45deg, #1a1a1a 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #1a1a1a 75%),
+        linear-gradient(-45deg, transparent 75%, #1a1a1a 75%);
+      background-size: 14px 14px;
+      background-position: 0 0, 0 7px, 7px -7px, -7px 0;
+      background-color: #111;
+    }
+
+    .canvas-container:hover {
+      box-shadow: 0 0 0 1px var(--accent), 0 0 28px rgba(0, 0, 0, .8), 0 0 55px rgba(214, 47, 47, .14);
+    }
+
+    canvas {
+      display: block;
+      image-rendering: pixelated;
+    }
+
+    .hint {
+      font-size: 0.5rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .kbd {
+      display: inline-block;
+      background: var(--border);
+      color: var(--muted);
+      padding: 1px 4px;
+      font-size: 0.5rem;
+      border-radius: 2px;
+    }
+
+    /* STATUS BAR */
+    .statusbar {
+      flex-shrink: 0;
+      display: flex;
+      gap: 18px;
+      font-size: 0.5rem;
+      letter-spacing: 2px;
+      color: var(--muted);
+      text-transform: uppercase;
+      padding: 5px 22px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      font-weight: 700;
+    }
+
+    .statusbar .stat {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    .statusbar .stat strong {
+      color: var(--accent);
+    }
+
+    /* HISTORY */
+    .history-strip {
+      display: flex;
+      gap: 3px;
+      flex-wrap: wrap;
+    }
+
+    .history-thumb {
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: border-color .15s;
+      image-rendering: pixelated;
+      flex-shrink: 0;
+    }
+
+    .history-thumb:hover {
+      border-color: var(--accent);
+    }
+
+    @keyframes flash {
+      0% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .2
+      }
+
+      100% {
+        opacity: 1
+      }
+    }
+
+    .flash {
+      animation: flash .18s ease;
+    }
+  </style>
 </head>
+
 <body>
 
-<header>
-  <div class="logo">
-    PIXELISSIMI
-    <span>i pixel di Emergentissimi</span>
+  <header>
+    <div class="logo">
+      PIXELISSIMI
+      <span>i pixel di Emergentissimi</span>
+    </div>
+    <div class="header-right">
+      <div class="animate-badge" id="animBadge">Animazione</div>
+      <div class="seed-display">SEED<br><strong id="seedDisplay">—</strong></div>
+    </div>
+  </header>
+
+  <main>
+    <aside>
+
+      <div class="sblock">
+        <div class="section-label">Genera</div>
+        <button class="btn btn-primary" onclick="generate()"><span>↺ Nuovo Pattern</span></button>
+        <div class="hint">Premi <span class="kbd">Spazio</span> o <span class="kbd">Invio</span></div>
+      </div>
+
+      <div class="sblock">
+        <div class="section-label">Canvas</div>
+        <div style="display:flex;gap:4px;align-items:center;">
+          <input type="number" id="cw" value="1080" min="64" max="2048" step="8" style="width:66px;">
+          <span style="color:var(--muted)">×</span>
+          <input type="number" id="ch" value="1350" min="64" max="2048" step="8" style="width:66px;">
+        </div>
+        <button class="btn" onclick="applySize()"><span>Applica</span></button>
+        <div class="bg2">
+          <button class="btn" onclick="setPreset(1080,1350)"><span>IG 4:5</span></button>
+          <button class="btn" onclick="setPreset(1080,1440)"><span>IG 3:4</span></button>
+          <button class="btn" onclick="setPreset(1080,1920)"><span>Story 9:16</span></button>
+          <button class="btn" onclick="setPreset(1080,1080)"><span>1080²</span></button>
+        </div>
+      </div>
+
+      <div class="sblock">
+        <div class="section-label">Griglia</div>
+        <div class="cg">
+          <label>Dimensione cella <span id="cellVal">32</span>px</label>
+          <input type="range" id="cellSize" min="4" max="128" value="32" step="2"
+            oninput="updateLabel('cellSize','cellVal');generate()">
+        </div>
+      </div>
+
+      <div class="sblock">
+        <div class="section-label">Rumore Perlin</div>
+        <div class="cg">
+          <label>Scala <span id="scaleVal">3.0</span></label>
+          <input type="range" id="noiseScale" min="0.5" max="10" value="3" step="0.1"
+            oninput="updateLabel('noiseScale','scaleVal');generate()">
+        </div>
+        <div class="cg">
+          <label>Ottave <span id="octVal">4</span></label>
+          <input type="range" id="octaves" min="1" max="8" value="4" step="1"
+            oninput="updateLabel('octaves','octVal');generate()">
+        </div>
+        <div class="cg">
+          <label>Persistenza <span id="persVal">0.50</span></label>
+          <input type="range" id="persistence" min="0.1" max="1" value="0.5" step="0.01"
+            oninput="updateLabel('persistence','persVal');generate()">
+        </div>
+        <div class="cg">
+          <label>Lacunarità <span id="lacVal">2.0</span></label>
+          <input type="range" id="lacunarity" min="1" max="4" value="2" step="0.1"
+            oninput="updateLabel('lacunarity','lacVal');generate()">
+        </div>
+        <div class="cg">
+          <label>Soglia <span id="threshVal">0.50</span></label>
+          <input type="range" id="threshold" min="0" max="1" value="0.5" step="0.01"
+            oninput="updateLabel('threshold','threshVal');generate()">
+        </div>
+      </div>
+
+      <div class="sblock">
+        <div class="section-label">Stile Pattern</div>
+        <button class="pill active" data-style="binary" onclick="setStyle(this)">Binario (pieno/vuoto)</button>
+        <button class="pill" data-style="stepped" onclick="setStyle(this)">Opacità a gradini</button>
+        <button class="pill" data-style="outline" onclick="setStyle(this)">Solo bordo</button>
+        <button class="pill" data-style="halftone" onclick="setStyle(this)">Mezzitoni cerchi</button>
+        <button class="pill" data-style="cross" onclick="setStyle(this)">Croce</button>
+        <button class="pill" data-style="corner" onclick="setStyle(this)">Angoli accentuati</button>
+      </div>
+
+      <div class="sblock">
+        <div class="section-label">Colore</div>
+        <div class="color-row">
+          <input type="color" id="patternColor" value="#D62F2F" oninput="syncHexFromPicker();generate()">
+          <input type="text" id="patternHexInput" value="#D62F2F" maxlength="7" placeholder="#D62F2F"
+            oninput="syncPickerFromHex()">
+        </div>
+        <div style="font-size:.48rem;color:var(--muted);letter-spacing:1px;">Sfondo: sempre trasparente</div>
+        <div class="bg2">
+          <button class="pill" onclick="setColor('#D62F2F')">Rosso</button>
+          <button class="pill" onclick="setColor('#ED6FA7')">Rosa</button>
+          <button class="pill" onclick="setColor('#FBBA31')">Giallo</button>
+          <button class="pill" onclick="setColor('#0080FF')">Blu</button>
+          <button class="pill" onclick="setColor('#F0E7EA')">Bianco</button>
+          <button class="pill" onclick="setColor('#030405')">Nero</button>
+        </div>
+      </div>
+
+      <div class="sblock">
+        <div class="section-label">Animazione</div>
+        <button class="btn" id="btnAnimate" onclick="toggleAnimate()"><span>▶ Avvia Animazione</span></button>
+        <div class="cg">
+          <label>Velocità <span id="speedVal">1.0</span>x</label>
+          <input type="range" id="animSpeed" min="0.1" max="5" value="1" step="0.1"
+            oninput="updateLabel('animSpeed','speedVal')">
+        </div>
+      </div>
+
+      <div class="sblock">
+        <div class="section-label">Esporta</div>
+        <button class="btn btn-primary" onclick="exportPNG()"><span>↓ Esporta PNG</span></button>
+        <button class="btn" onclick="exportHighRes()"><span>↓ Esporta PNG 2×</span></button>
+        <button class="btn" id="btnRecord" onclick="toggleRecording()"><span>⧨ Esporta WebM + MP4</span></button>
+        <button class="btn btn-primary" id="btnRecordMov" onclick="exportMOVWithAlpha(canvas, 5, 30)"><span>↓ MOV
+            Trasparente (5s)</span></button>
+        <button class="btn" onclick="copySeed()"><span>⊕ Copia Seed</span></button>
+      </div>
+
+      <div class="sblock">
+        <div class="section-label">Cronologia</div>
+        <div class="history-strip" id="historyStrip"></div>
+      </div>
+
+    </aside>
+
+    <div class="canvas-wrap">
+      <div class="canvas-container">
+        <canvas id="canvas" width="1080" height="1350"></canvas>
+      </div>
+      <div class="hint">
+        <span class="kbd">Spazio</span> nuovo &nbsp;·&nbsp; <span class="kbd">E</span> esporta &nbsp;·&nbsp; <span
+          class="kbd">A</span> anima &nbsp;·&nbsp; <span class="kbd">↑↓</span> scala rumore
+      </div>
+    </div>
+  </main>
+
+  <div class="statusbar">
+    <div class="stat">GRIGLIA <strong id="statGrid">—</strong></div>
+    <div class="stat">CELLE <strong id="statCells">—</strong></div>
+    <div class="stat">DENSITÀ <strong id="statDensity">—</strong></div>
+    <div class="stat">SCALA <strong id="statScale">—</strong></div>
+    <div class="stat">STILE <strong id="statStyle">—</strong></div>
   </div>
-  <div class="header-right">
-    <div class="animate-badge" id="animBadge">Animazione</div>
-    <div class="seed-display">SEED<br><strong id="seedDisplay">—</strong></div>
-  </div>
-</header>
 
-<main>
-  <aside>
-
-    <div class="sblock">
-      <div class="section-label">Genera</div>
-      <button class="btn btn-primary" onclick="generate()"><span>↺ Nuovo Pattern</span></button>
-      <div class="hint">Premi <span class="kbd">Spazio</span> o <span class="kbd">Invio</span></div>
-    </div>
-
-    <div class="sblock">
-      <div class="section-label">Canvas</div>
-      <div style="display:flex;gap:4px;align-items:center;">
-        <input type="number" id="cw" value="1080" min="64" max="2048" step="8" style="width:66px;">
-        <span style="color:var(--muted)">×</span>
-        <input type="number" id="ch" value="1350" min="64" max="2048" step="8" style="width:66px;">
-      </div>
-      <button class="btn" onclick="applySize()"><span>Applica</span></button>
-      <div class="bg2">
-        <button class="btn" onclick="setPreset(1080,1350)"><span>IG 4:5</span></button>
-        <button class="btn" onclick="setPreset(1080,1440)"><span>IG 3:4</span></button>
-        <button class="btn" onclick="setPreset(1080,1920)"><span>Story 9:16</span></button>
-        <button class="btn" onclick="setPreset(1080,1080)"><span>1080²</span></button>
-      </div>
-    </div>
-
-    <div class="sblock">
-      <div class="section-label">Griglia</div>
-      <div class="cg">
-        <label>Dimensione cella <span id="cellVal">32</span>px</label>
-        <input type="range" id="cellSize" min="4" max="128" value="32" step="2" oninput="updateLabel('cellSize','cellVal');generate()">
-      </div>
-    </div>
-
-    <div class="sblock">
-      <div class="section-label">Rumore Perlin</div>
-      <div class="cg">
-        <label>Scala <span id="scaleVal">3.0</span></label>
-        <input type="range" id="noiseScale" min="0.5" max="10" value="3" step="0.1" oninput="updateLabel('noiseScale','scaleVal');generate()">
-      </div>
-      <div class="cg">
-        <label>Ottave <span id="octVal">4</span></label>
-        <input type="range" id="octaves" min="1" max="8" value="4" step="1" oninput="updateLabel('octaves','octVal');generate()">
-      </div>
-      <div class="cg">
-        <label>Persistenza <span id="persVal">0.50</span></label>
-        <input type="range" id="persistence" min="0.1" max="1" value="0.5" step="0.01" oninput="updateLabel('persistence','persVal');generate()">
-      </div>
-      <div class="cg">
-        <label>Lacunarità <span id="lacVal">2.0</span></label>
-        <input type="range" id="lacunarity" min="1" max="4" value="2" step="0.1" oninput="updateLabel('lacunarity','lacVal');generate()">
-      </div>
-      <div class="cg">
-        <label>Soglia <span id="threshVal">0.50</span></label>
-        <input type="range" id="threshold" min="0" max="1" value="0.5" step="0.01" oninput="updateLabel('threshold','threshVal');generate()">
-      </div>
-    </div>
-
-    <div class="sblock">
-      <div class="section-label">Stile Pattern</div>
-      <button class="pill active" data-style="binary" onclick="setStyle(this)">Binario (pieno/vuoto)</button>
-      <button class="pill" data-style="stepped" onclick="setStyle(this)">Opacità a gradini</button>
-      <button class="pill" data-style="outline" onclick="setStyle(this)">Solo bordo</button>
-      <button class="pill" data-style="halftone" onclick="setStyle(this)">Mezzitoni cerchi</button>
-      <button class="pill" data-style="cross" onclick="setStyle(this)">Croce</button>
-      <button class="pill" data-style="corner" onclick="setStyle(this)">Angoli accentuati</button>
-    </div>
-
-    <div class="sblock">
-      <div class="section-label">Colore</div>
-      <div class="color-row">
-        <input type="color" id="patternColor" value="#D62F2F" oninput="syncHexFromPicker();generate()">
-        <input type="text" id="patternHexInput" value="#D62F2F" maxlength="7" placeholder="#D62F2F" oninput="syncPickerFromHex()">
-      </div>
-      <div style="font-size:.48rem;color:var(--muted);letter-spacing:1px;">Sfondo: sempre trasparente</div>
-      <div class="bg2">
-        <button class="pill" onclick="setColor('#D62F2F')">Rosso</button>
-        <button class="pill" onclick="setColor('#ED6FA7')">Rosa</button>
-        <button class="pill" onclick="setColor('#FBBA31')">Giallo</button>
-        <button class="pill" onclick="setColor('#0080FF')">Blu</button>
-        <button class="pill" onclick="setColor('#F0E7EA')">Bianco</button>
-        <button class="pill" onclick="setColor('#030405')">Nero</button>
-      </div>
-    </div>
-
-    <div class="sblock">
-      <div class="section-label">Animazione</div>
-      <button class="btn" id="btnAnimate" onclick="toggleAnimate()"><span>▶ Avvia Animazione</span></button>
-      <div class="cg">
-        <label>Velocità <span id="speedVal">1.0</span>x</label>
-        <input type="range" id="animSpeed" min="0.1" max="5" value="1" step="0.1" oninput="updateLabel('animSpeed','speedVal')">
-      </div>
-    </div>
-
-    <div class="sblock">
-      <div class="section-label">Esporta</div>
-      <button class="btn btn-primary" onclick="exportPNG()"><span>↓ Esporta PNG</span></button>
-      <button class="btn" onclick="exportHighRes()"><span>↓ Esporta PNG 2×</span></button>
-      <button class="btn" id="btnRecord" onclick="toggleRecording()"><span>⧨ Esporta WebM + MP4</span></button>
-      <button class="btn" onclick="copySeed()"><span>⊕ Copia Seed</span></button>
-    </div>
-
-    <div class="sblock">
-      <div class="section-label">Cronologia</div>
-      <div class="history-strip" id="historyStrip"></div>
-    </div>
-
-  </aside>
-
-  <div class="canvas-wrap">
-    <div class="canvas-container">
-      <canvas id="canvas" width="1080" height="1350"></canvas>
-    </div>
-    <div class="hint">
-      <span class="kbd">Spazio</span> nuovo &nbsp;·&nbsp; <span class="kbd">E</span> esporta &nbsp;·&nbsp; <span class="kbd">A</span> anima &nbsp;·&nbsp; <span class="kbd">↑↓</span> scala rumore
-    </div>
-  </div>
-</main>
-
-<div class="statusbar">
-  <div class="stat">GRIGLIA <strong id="statGrid">—</strong></div>
-  <div class="stat">CELLE <strong id="statCells">—</strong></div>
-  <div class="stat">DENSITÀ <strong id="statDensity">—</strong></div>
-  <div class="stat">SCALA <strong id="statScale">—</strong></div>
-  <div class="stat">STILE <strong id="statStyle">—</strong></div>
-</div>
-
-<script>
-class Perlin {
-  constructor(seed=0){
-    this.p=new Uint8Array(512);
-    const perm=new Uint8Array(256);
-    for(let i=0;i<256;i++) perm[i]=i;
-    let s=seed|0;
-    for(let i=255;i>0;i--){s=(s*1664525+1013904223)&0xffffffff;const j=((s>>>0)%(i+1));[perm[i],perm[j]]=[perm[j],perm[i]];}
-    for(let i=0;i<512;i++) this.p[i]=perm[i&255];
-  }
-  fade(t){return t*t*t*(t*(t*6-15)+10);}
-  lerp(a,b,t){return a+t*(b-a);}
-  grad(h,x,y,z){const u=h<8?x:y,v=h<4?y:h===12||h===14?x:z;return((h&1)?-u:u)+((h&2)?-v:v);}
-  noise(x,y,z=0){
-    const p=this.p,X=Math.floor(x)&255,Y=Math.floor(y)&255,Z=Math.floor(z)&255;
-    x-=Math.floor(x);y-=Math.floor(y);z-=Math.floor(z);
-    const u=this.fade(x),v=this.fade(y),w=this.fade(z);
-    const A=p[X]+Y,AA=p[A]+Z,AB=p[A+1]+Z,B=p[X+1]+Y,BA=p[B]+Z,BB=p[B+1]+Z;
-    return this.lerp(
-      this.lerp(this.lerp(this.grad(p[AA]&15,x,y,z),this.grad(p[BA]&15,x-1,y,z),u),this.lerp(this.grad(p[AB]&15,x,y-1,z),this.grad(p[BB]&15,x-1,y-1,z),u),v),
-      this.lerp(this.lerp(this.grad(p[AA+1]&15,x,y,z-1),this.grad(p[BA+1]&15,x-1,y,z-1),u),this.lerp(this.grad(p[AB+1]&15,x,y-1,z-1),this.grad(p[BB+1]&15,x-1,y-1,z-1),u),v),w);
-  }
-  octave(x,y,z=0,oct=4,pers=0.5,lac=2){
-    let val=0,amp=1,freq=1,max=0;
-    for(let i=0;i<oct;i++){val+=this.noise(x*freq,y*freq,z*freq)*amp;max+=amp;amp*=pers;freq*=lac;}
-    return val/max;
-  }
-}
-
-let currentSeed=Math.floor(Math.random()*999999);
-let perlin=new Perlin(currentSeed);
-let currentStyle='binary';
-let animating=false, animFrame=null, animT=0;
-
-// Variabili per l'esportazione video doppia
-let mediaRecorderWebm = null;
-let mediaRecorderMp4 = null;
-let recordedChunksWebm = [];
-let recordedChunksMp4 = [];
-let isRecording = false;
-let exportCanvas = null;
-let exportCtx = null;
-
-const canvas=document.getElementById('canvas');
-const ctx=canvas.getContext('2d');
-
-function updateLabel(sid,lid){
-  const v=parseFloat(document.getElementById(sid).value);
-  const el=document.getElementById(lid);
-  if(['noiseScale','animSpeed','lacunarity'].includes(sid)) el.textContent=v.toFixed(1);
-  else if(['persistence','threshold'].includes(sid)) el.textContent=v.toFixed(2);
-  else el.textContent=v;
-}
-
-function setStyle(btn){
-  document.querySelectorAll('.pill[data-style]').forEach(p=>p.classList.remove('active'));
-  btn.classList.add('active'); currentStyle=btn.dataset.style; generate();
-}
-
-function setColor(hex){
-  document.getElementById('patternColor').value=hex;
-  document.getElementById('patternHexInput').value=hex;
-  generate();
-}
-
-function syncHexFromPicker(){
-  document.getElementById('patternHexInput').value=document.getElementById('patternColor').value;
-}
-
-function syncPickerFromHex(){
-  const raw=document.getElementById('patternHexInput').value.trim();
-  const valid=/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(raw);
-  const inp=document.getElementById('patternHexInput');
-  if(valid){inp.style.borderColor='';inp.style.color='var(--accent)';document.getElementById('patternColor').value=raw;generate();}
-  else{inp.style.borderColor='#D62F2F';inp.style.color='#D62F2F';}
-}
-
-function setPreset(w,h){document.getElementById('cw').value=w;document.getElementById('ch').value=h;applySize();}
-
-function applySize(){
-  const w=Math.max(64,Math.min(2048,parseInt(document.getElementById('cw').value)||1080));
-  const h=Math.max(64,Math.min(2048,parseInt(document.getElementById('ch').value)||1350));
-  canvas.width=w; canvas.height=h; fitCanvas(); generate();
-}
-
-function fitCanvas(){
-  const wrap=document.querySelector('.canvas-wrap');
-  const pad=28, hintH=28;
-  const maxW=wrap.clientWidth-pad, maxH=wrap.clientHeight-pad-hintH;
-  const scale=Math.min(1,maxW/canvas.width,maxH/canvas.height);
-  canvas.style.width=Math.floor(canvas.width*scale)+'px';
-  canvas.style.height=Math.floor(canvas.height*scale)+'px';
-}
-
-function draw(t=0,newSeed=false){
-  if(newSeed){
-    currentSeed=Math.floor(Math.random()*999999);
-    perlin=new Perlin(currentSeed);
-    document.getElementById('seedDisplay').textContent=currentSeed;
-    canvas.classList.add('flash');
-    setTimeout(()=>canvas.classList.remove('flash'),180);
-  }
-  const W=canvas.width,H=canvas.height;
-  const cellSize=parseInt(document.getElementById('cellSize').value);
-  const noiseScale=parseFloat(document.getElementById('noiseScale').value);
-  const octaves=parseInt(document.getElementById('octaves').value);
-  const pers=parseFloat(document.getElementById('persistence').value);
-  const lac=parseFloat(document.getElementById('lacunarity').value);
-  const thr=parseFloat(document.getElementById('threshold').value);
-  const hex=document.getElementById('patternColor').value;
-  const cols=Math.max(1,Math.floor(W/cellSize));
-  const rows=Math.max(1,Math.floor(H/cellSize));
-  const cw0=W/cols, ch0=H/rows;
-  ctx.clearRect(0,0,W,H);
-  let filled=0;
-  for(let row=0;row<rows;row++){
-    for(let col=0;col<cols;col++){
-      const raw=perlin.octave((col/cols)*noiseScale,(row/rows)*noiseScale,t*0.4,octaves,pers,lac);
-      const n=(raw+1)*0.5;
-      const x=Math.round(col*cw0),y=Math.round(row*ch0);
-      const cw=Math.round((col+1)*cw0)-x, ch=Math.round((row+1)*ch0)-y;
-      drawCell(ctx,x,y,cw,ch,n,thr,hex);
-      if(n>thr) filled++;
+  <script>
+    class Perlin {
+      constructor(seed = 0) {
+        this.p = new Uint8Array(512);
+        const perm = new Uint8Array(256);
+        for (let i = 0; i < 256; i++) perm[i] = i;
+        let s = seed | 0;
+        for (let i = 255; i > 0; i--) { s = (s * 1664525 + 1013904223) & 0xffffffff; const j = ((s >>> 0) % (i + 1));[perm[i], perm[j]] = [perm[j], perm[i]]; }
+        for (let i = 0; i < 512; i++) this.p[i] = perm[i & 255];
+      }
+      fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
+      lerp(a, b, t) { return a + t * (b - a); }
+      grad(h, x, y, z) { const u = h < 8 ? x : y, v = h < 4 ? y : h === 12 || h === 14 ? x : z; return ((h & 1) ? -u : u) + ((h & 2) ? -v : v); }
+      noise(x, y, z = 0) {
+        const p = this.p, X = Math.floor(x) & 255, Y = Math.floor(y) & 255, Z = Math.floor(z) & 255;
+        x -= Math.floor(x); y -= Math.floor(y); z -= Math.floor(z);
+        const u = this.fade(x), v = this.fade(y), w = this.fade(z);
+        const A = p[X] + Y, AA = p[A] + Z, AB = p[A + 1] + Z, B = p[X + 1] + Y, BA = p[B] + Z, BB = p[B + 1] + Z;
+        return this.lerp(
+          this.lerp(this.lerp(this.grad(p[AA] & 15, x, y, z), this.grad(p[BA] & 15, x - 1, y, z), u), this.lerp(this.grad(p[AB] & 15, x, y - 1, z), this.grad(p[BB] & 15, x - 1, y - 1, z), u), v),
+          this.lerp(this.lerp(this.grad(p[AA + 1] & 15, x, y, z - 1), this.grad(p[BA + 1] & 15, x - 1, y, z - 1), u), this.lerp(this.grad(p[AB + 1] & 15, x, y - 1, z - 1), this.grad(p[BB + 1] & 15, x - 1, y - 1, z - 1), u), v), w);
+      }
+      octave(x, y, z = 0, oct = 4, pers = 0.5, lac = 2) {
+        let val = 0, amp = 1, freq = 1, max = 0;
+        for (let i = 0; i < oct; i++) { val += this.noise(x * freq, y * freq, z * freq) * amp; max += amp; amp *= pers; freq *= lac; }
+        return val / max;
+      }
     }
-  }
-  document.getElementById('statGrid').textContent=`${cols}×${rows}`;
-  document.getElementById('statCells').textContent=cols*rows;
-  document.getElementById('statDensity').textContent=Math.round((filled/(cols*rows))*100)+'%';
-  document.getElementById('statScale').textContent=noiseScale.toFixed(1);
-  document.getElementById('statStyle').textContent=currentStyle;
 
-  // --- SINCRONIZZAZIONE CANVAS NERO PER MP4 ---
-  if (isRecording && exportCanvas) {
-    exportCtx.fillStyle = '#000000';
-    exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-    exportCtx.drawImage(canvas, 0, 0);
-  }
-}
+    let currentSeed = Math.floor(Math.random() * 999999);
+    let perlin = new Perlin(currentSeed);
+    let currentStyle = 'binary';
+    let animating = false, animFrame = null, animT = 0;
 
-function drawCell(ctx,x,y,cw,ch,n,thr,hex){
-  const above=n>thr;
-  switch(currentStyle){
-    case 'binary': if(above){ctx.fillStyle=hex;ctx.fillRect(x,y,cw,ch);} break;
-    case 'stepped':{const s=Math.floor(n*4)/4;if(s>0){ctx.fillStyle=hex;ctx.globalAlpha=s;ctx.fillRect(x,y,cw,ch);ctx.globalAlpha=1;}break;}
-    case 'outline': if(above){ctx.strokeStyle=hex;ctx.lineWidth=Math.max(1,cw*.08);ctx.globalAlpha=n;ctx.strokeRect(x+.5,y+.5,cw-1,ch-1);ctx.globalAlpha=1;}break;
-    case 'halftone': if(n>.15){const r=n*Math.min(cw,ch)*.5*.95;ctx.beginPath();ctx.arc(x+cw/2,y+ch/2,r,0,Math.PI*2);ctx.fillStyle=hex;ctx.globalAlpha=Math.min(1,n*1.5);ctx.fill();ctx.globalAlpha=1;}break;
-    case 'cross': if(above){ctx.strokeStyle=hex;ctx.lineWidth=Math.max(1,cw*.1);ctx.globalAlpha=n;ctx.beginPath();ctx.moveTo(x,y+ch/2);ctx.lineTo(x+cw,y+ch/2);ctx.stroke();ctx.beginPath();ctx.moveTo(x+cw/2,y);ctx.lineTo(x+cw/2,y+ch);ctx.stroke();ctx.globalAlpha=1;}break;
-    case 'corner': if(n>.3){const sz=Math.min(cw,ch)*n*.6;ctx.fillStyle=hex;ctx.globalAlpha=Math.min(1,n);ctx.fillRect(x,y,sz*.4,sz*.4);ctx.fillRect(x+cw-sz*.4,y,sz*.4,sz*.4);ctx.fillRect(x,y+ch-sz*.4,sz*.4,sz*.4);ctx.fillRect(x+cw-sz*.4,y+ch-sz*.4,sz*.4,sz*.4);ctx.globalAlpha=1;}break;
-  }
-}
+    // Variabili per l'esportazione video doppia
+    let mediaRecorderWebm = null;
+    let mediaRecorderMp4 = null;
+    let recordedChunksWebm = [];
+    let recordedChunksMp4 = [];
+    let isRecording = false;
+    let exportCanvas = null;
+    let exportCtx = null;
 
-function generate(){if(animating)return;draw(0,true);addHistory();}
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
 
-function toggleAnimate(){
-  animating=!animating;
-  const btn=document.getElementById('btnAnimate'),badge=document.getElementById('animBadge');
-  if(animating){btn.innerHTML='<span>■ Ferma Animazione</span>';btn.classList.add('active');badge.classList.add('visible');loop();}
-  else{btn.innerHTML='<span>▶ Avvia Animazione</span>';btn.classList.remove('active');badge.classList.remove('visible');cancelAnimationFrame(animFrame);}
-}
-
-function loop(){animT+=.005*parseFloat(document.getElementById('animSpeed').value);draw(animT,false);animFrame=requestAnimationFrame(loop);}
-
-function exportPNG(){const a=document.createElement('a');a.download=`pixelissimi-${currentSeed}.png`;a.href=canvas.toDataURL('image/png');a.click();}
-
-function exportHighRes(){
-  const W=canvas.width*2,H=canvas.height*2;
-  const tmp=document.createElement('canvas');tmp.width=W;tmp.height=H;
-  const tc=tmp.getContext('2d');
-  const cellSize=parseInt(document.getElementById('cellSize').value)*2;
-  const noiseScale=parseFloat(document.getElementById('noiseScale').value);
-  const octaves=parseInt(document.getElementById('octaves').value);
-  const pers=parseFloat(document.getElementById('persistence').value);
-  const lac=parseFloat(document.getElementById('lacunarity').value);
-  const thr=parseFloat(document.getElementById('threshold').value);
-  const hex=document.getElementById('patternColor').value;
-  const cols=Math.max(1,Math.floor(W/cellSize)),rows=Math.max(1,Math.floor(H/cellSize));
-  const cw0=W/cols,ch0=H/rows;
-  tc.clearRect(0,0,W,H);
-  for(let row=0;row<rows;row++) for(let col=0;col<cols;col++){
-    const raw=perlin.octave((col/cols)*noiseScale,(row/rows)*noiseScale,animT*.4,octaves,pers,lac);
-    const n=(raw+1)*.5;
-    const x=Math.round(col*cw0),y=Math.round(row*ch0);
-    drawCell(tc,x,y,Math.round((col+1)*cw0)-x,Math.round((row+1)*ch0)-y,n,thr,hex);
-  }
-  const a=document.createElement('a');a.download=`pixelissimi-${currentSeed}-2x.png`;a.href=tmp.toDataURL('image/png');a.click();
-}
-
-// FUNZIONE DI REGISTRAZIONE DOPPIA (WebM Alpha + MP4 Nero)
-function toggleRecording() {
-  const btn = document.getElementById('btnRecord');
-  
-  if (!isRecording) {
-    recordedChunksWebm = [];
-    recordedChunksMp4 = [];
-
-    // 1. Setup canvas nascosto per lo sfondo nero (MP4)
-    exportCanvas = document.createElement('canvas');
-    exportCanvas.width = canvas.width;
-    exportCanvas.height = canvas.height;
-    exportCtx = exportCanvas.getContext('2d');
-
-    // Disegna il primissimo frame
-    exportCtx.fillStyle = '#000000';
-    exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-    exportCtx.drawImage(canvas, 0, 0);
-
-    // 2. Crea i due flussi a 30fps
-    const streamWebm = canvas.captureStream(30);
-    const streamMp4 = exportCanvas.captureStream(30);
-
-    // 3. Inizializza Recorder WebM (Alpha/Trasparenza)
-    let optionsWebm = { mimeType: 'video/webm; codecs=vp9' };
-    try { mediaRecorderWebm = new MediaRecorder(streamWebm, optionsWebm); } 
-    catch (e) { mediaRecorderWebm = new MediaRecorder(streamWebm); }
-
-    // 4. Inizializza Recorder MP4 (Sfondo Nero)
-    let optionsMp4 = { mimeType: 'video/mp4' };
-    if (!MediaRecorder.isTypeSupported('video/mp4')) {
-      optionsMp4 = { mimeType: 'video/webm; codecs=h264' };
+    function updateLabel(sid, lid) {
+      const v = parseFloat(document.getElementById(sid).value);
+      const el = document.getElementById(lid);
+      if (['noiseScale', 'animSpeed', 'lacunarity'].includes(sid)) el.textContent = v.toFixed(1);
+      else if (['persistence', 'threshold'].includes(sid)) el.textContent = v.toFixed(2);
+      else el.textContent = v;
     }
-    try { mediaRecorderMp4 = new MediaRecorder(streamMp4, optionsMp4); } 
-    catch (e) { mediaRecorderMp4 = new MediaRecorder(streamMp4); }
 
-    mediaRecorderWebm.ondataavailable = (e) => { if (e.data.size > 0) recordedChunksWebm.push(e.data); };
-    mediaRecorderMp4.ondataavailable = (e) => { if (e.data.size > 0) recordedChunksMp4.push(e.data); };
+    function setStyle(btn) {
+      document.querySelectorAll('.pill[data-style]').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active'); currentStyle = btn.dataset.style; generate();
+    }
 
-    // Download WebM al termine
-    mediaRecorderWebm.onstop = () => {
-      const blob = new Blob(recordedChunksWebm, { type: 'video/webm' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = `pixelissimi-alpha-${currentSeed}.webm`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-    };
+    function setColor(hex) {
+      document.getElementById('patternColor').value = hex;
+      document.getElementById('patternHexInput').value = hex;
+      generate();
+    }
 
-    // Download MP4 al termine
-    mediaRecorderMp4.onstop = () => {
-      const blob = new Blob(recordedChunksMp4, { type: mediaRecorderMp4.mimeType || 'video/mp4' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = `pixelissimi-blackbg-${currentSeed}.mp4`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      
-      exportCanvas = null; // Pulizia memoria
-    };
+    function syncHexFromPicker() {
+      document.getElementById('patternHexInput').value = document.getElementById('patternColor').value;
+    }
 
-    mediaRecorderWebm.start();
-    mediaRecorderMp4.start();
-    isRecording = true;
-    
-    btn.innerHTML = '<span style="color: #ff3c5e;">■ Ferma Registrazione...</span>';
-    btn.classList.add('active');
-    btn.style.borderColor = '#ff3c5e';
+    function syncPickerFromHex() {
+      const raw = document.getElementById('patternHexInput').value.trim();
+      const valid = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(raw);
+      const inp = document.getElementById('patternHexInput');
+      if (valid) { inp.style.borderColor = ''; inp.style.color = 'var(--accent)'; document.getElementById('patternColor').value = raw; generate(); }
+      else { inp.style.borderColor = '#D62F2F'; inp.style.color = '#D62F2F'; }
+    }
 
-    if (!animating) toggleAnimate();
-  } else {
-    mediaRecorderWebm.stop();
-    mediaRecorderMp4.stop();
-    isRecording = false;
-    
-    btn.innerHTML = '<span>⧨ Esporta WebM + MP4</span>';
-    btn.classList.remove('active');
-    btn.style.borderColor = '';
-  }
-}
+    function setPreset(w, h) { document.getElementById('cw').value = w; document.getElementById('ch').value = h; applySize(); }
 
-function copySeed(){
-  navigator.clipboard.writeText(currentSeed.toString()).then(()=>{
-    const btn=event.target.closest('button'),orig=btn.innerHTML;
-    btn.innerHTML='<span>✓ Copiato!</span>';setTimeout(()=>{btn.innerHTML=orig;},1400);
-  });
-}
+    function applySize() {
+      const w = Math.max(64, Math.min(2048, parseInt(document.getElementById('cw').value) || 1080));
+      const h = Math.max(64, Math.min(2048, parseInt(document.getElementById('ch').value) || 1350));
+      canvas.width = w; canvas.height = h; fitCanvas(); generate();
+    }
 
-function addHistory(){
-  const mini=document.createElement('canvas');
-  mini.width=28;mini.height=28;mini.className='history-thumb';
-  mini.title=`Seed: ${currentSeed}`;
-  const mc=mini.getContext('2d');
-  for(let r=0;r<28;r+=7) for(let c=0;c<28;c+=7){mc.fillStyle=((r+c)/7)%2===0?'#1a1a1a':'#111';mc.fillRect(c,r,7,7);}
-  mc.drawImage(canvas,0,0,28,28);
-  const saved=currentSeed;
-  mini.onclick=()=>{currentSeed=saved;perlin=new Perlin(saved);document.getElementById('seedDisplay').textContent=saved;draw(0,false);};
-  const strip=document.getElementById('historyStrip');
-  strip.insertBefore(mini,strip.firstChild);
-  while(strip.children.length>20) strip.removeChild(strip.lastChild);
-}
+    function fitCanvas() {
+      const wrap = document.querySelector('.canvas-wrap');
+      const pad = 28, hintH = 28;
+      const maxW = wrap.clientWidth - pad, maxH = wrap.clientHeight - pad - hintH;
+      const scale = Math.min(1, maxW / canvas.width, maxH / canvas.height);
+      canvas.style.width = Math.floor(canvas.width * scale) + 'px';
+      canvas.style.height = Math.floor(canvas.height * scale) + 'px';
+    }
 
-document.addEventListener('keydown',(e)=>{
-  if(e.target.tagName==='INPUT') return;
-  if(e.code==='Space'||e.code==='Enter'){e.preventDefault();generate();}
-  if(e.code==='KeyE') exportPNG();
-  if(e.code==='KeyA') toggleAnimate();
-  if(e.code==='ArrowUp'){const s=document.getElementById('noiseScale');s.value=Math.min(10,parseFloat(s.value)+.5);updateLabel('noiseScale','scaleVal');generate();}
-  if(e.code==='ArrowDown'){const s=document.getElementById('noiseScale');s.value=Math.max(.5,parseFloat(s.value)-.5);updateLabel('noiseScale','scaleVal');generate();}
-});
+    function draw(t = 0, newSeed = false) {
+      if (newSeed) {
+        currentSeed = Math.floor(Math.random() * 999999);
+        perlin = new Perlin(currentSeed);
+        document.getElementById('seedDisplay').textContent = currentSeed;
+        canvas.classList.add('flash');
+        setTimeout(() => canvas.classList.remove('flash'), 180);
+      }
+      const W = canvas.width, H = canvas.height;
+      const cellSize = parseInt(document.getElementById('cellSize').value);
+      const noiseScale = parseFloat(document.getElementById('noiseScale').value);
+      const octaves = parseInt(document.getElementById('octaves').value);
+      const pers = parseFloat(document.getElementById('persistence').value);
+      const lac = parseFloat(document.getElementById('lacunarity').value);
+      const thr = parseFloat(document.getElementById('threshold').value);
+      const hex = document.getElementById('patternColor').value;
+      const cols = Math.max(1, Math.floor(W / cellSize));
+      const rows = Math.max(1, Math.floor(H / cellSize));
+      const cw0 = W / cols, ch0 = H / rows;
+      ctx.clearRect(0, 0, W, H);
+      let filled = 0;
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const raw = perlin.octave((col / cols) * noiseScale, (row / rows) * noiseScale, t * 0.4, octaves, pers, lac);
+          const n = (raw + 1) * 0.5;
+          const x = Math.round(col * cw0), y = Math.round(row * ch0);
+          const cw = Math.round((col + 1) * cw0) - x, ch = Math.round((row + 1) * ch0) - y;
+          drawCell(ctx, x, y, cw, ch, n, thr, hex);
+          if (n > thr) filled++;
+        }
+      }
+      document.getElementById('statGrid').textContent = `${cols}×${rows}`;
+      document.getElementById('statCells').textContent = cols * rows;
+      document.getElementById('statDensity').textContent = Math.round((filled / (cols * rows)) * 100) + '%';
+      document.getElementById('statScale').textContent = noiseScale.toFixed(1);
+      document.getElementById('statStyle').textContent = currentStyle;
 
-window.addEventListener('resize',fitCanvas);
-fitCanvas();
-generate();
-</script>
+      // --- SINCRONIZZAZIONE CANVAS NERO PER MP4 ---
+      if (isRecording && exportCanvas) {
+        exportCtx.fillStyle = '#000000';
+        exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+        exportCtx.drawImage(canvas, 0, 0);
+      }
+    }
+
+    function drawCell(ctx, x, y, cw, ch, n, thr, hex) {
+      const above = n > thr;
+      switch (currentStyle) {
+        case 'binary': if (above) { ctx.fillStyle = hex; ctx.fillRect(x, y, cw, ch); } break;
+        case 'stepped': { const s = Math.floor(n * 4) / 4; if (s > 0) { ctx.fillStyle = hex; ctx.globalAlpha = s; ctx.fillRect(x, y, cw, ch); ctx.globalAlpha = 1; } break; }
+        case 'outline': if (above) { ctx.strokeStyle = hex; ctx.lineWidth = Math.max(1, cw * .08); ctx.globalAlpha = n; ctx.strokeRect(x + .5, y + .5, cw - 1, ch - 1); ctx.globalAlpha = 1; } break;
+        case 'halftone': if (n > .15) { const r = n * Math.min(cw, ch) * .5 * .95; ctx.beginPath(); ctx.arc(x + cw / 2, y + ch / 2, r, 0, Math.PI * 2); ctx.fillStyle = hex; ctx.globalAlpha = Math.min(1, n * 1.5); ctx.fill(); ctx.globalAlpha = 1; } break;
+        case 'cross': if (above) { ctx.strokeStyle = hex; ctx.lineWidth = Math.max(1, cw * .1); ctx.globalAlpha = n; ctx.beginPath(); ctx.moveTo(x, y + ch / 2); ctx.lineTo(x + cw, y + ch / 2); ctx.stroke(); ctx.beginPath(); ctx.moveTo(x + cw / 2, y); ctx.lineTo(x + cw / 2, y + ch); ctx.stroke(); ctx.globalAlpha = 1; } break;
+        case 'corner': if (n > .3) { const sz = Math.min(cw, ch) * n * .6; ctx.fillStyle = hex; ctx.globalAlpha = Math.min(1, n); ctx.fillRect(x, y, sz * .4, sz * .4); ctx.fillRect(x + cw - sz * .4, y, sz * .4, sz * .4); ctx.fillRect(x, y + ch - sz * .4, sz * .4, sz * .4); ctx.fillRect(x + cw - sz * .4, y + ch - sz * .4, sz * .4, sz * .4); ctx.globalAlpha = 1; } break;
+      }
+    }
+
+    function generate() { if (animating) return; draw(0, true); addHistory(); }
+
+    function toggleAnimate() {
+      animating = !animating;
+      const btn = document.getElementById('btnAnimate'), badge = document.getElementById('animBadge');
+      if (animating) { btn.innerHTML = '<span>■ Ferma Animazione</span>'; btn.classList.add('active'); badge.classList.add('visible'); loop(); }
+      else { btn.innerHTML = '<span>▶ Avvia Animazione</span>'; btn.classList.remove('active'); badge.classList.remove('visible'); cancelAnimationFrame(animFrame); }
+    }
+
+    function loop() { animT += .005 * parseFloat(document.getElementById('animSpeed').value); draw(animT, false); animFrame = requestAnimationFrame(loop); }
+
+    function exportPNG() { const a = document.createElement('a'); a.download = `pixelissimi-${currentSeed}.png`; a.href = canvas.toDataURL('image/png'); a.click(); }
+
+    function exportHighRes() {
+      const W = canvas.width * 2, H = canvas.height * 2;
+      const tmp = document.createElement('canvas'); tmp.width = W; tmp.height = H;
+      const tc = tmp.getContext('2d');
+      const cellSize = parseInt(document.getElementById('cellSize').value) * 2;
+      const noiseScale = parseFloat(document.getElementById('noiseScale').value);
+      const octaves = parseInt(document.getElementById('octaves').value);
+      const pers = parseFloat(document.getElementById('persistence').value);
+      const lac = parseFloat(document.getElementById('lacunarity').value);
+      const thr = parseFloat(document.getElementById('threshold').value);
+      const hex = document.getElementById('patternColor').value;
+      const cols = Math.max(1, Math.floor(W / cellSize)), rows = Math.max(1, Math.floor(H / cellSize));
+      const cw0 = W / cols, ch0 = H / rows;
+      tc.clearRect(0, 0, W, H);
+      for (let row = 0; row < rows; row++) for (let col = 0; col < cols; col++) {
+        const raw = perlin.octave((col / cols) * noiseScale, (row / rows) * noiseScale, animT * .4, octaves, pers, lac);
+        const n = (raw + 1) * .5;
+        const x = Math.round(col * cw0), y = Math.round(row * ch0);
+        drawCell(tc, x, y, Math.round((col + 1) * cw0) - x, Math.round((row + 1) * ch0) - y, n, thr, hex);
+      }
+      const a = document.createElement('a'); a.download = `pixelissimi-${currentSeed}-2x.png`; a.href = tmp.toDataURL('image/png'); a.click();
+    }
+
+    // FUNZIONE DI REGISTRAZIONE DOPPIA (WebM Alpha + MP4 Nero)
+    function toggleRecording() {
+      const btn = document.getElementById('btnRecord');
+
+      if (!isRecording) {
+        recordedChunksWebm = [];
+        recordedChunksMp4 = [];
+
+        // 1. Setup canvas nascosto per lo sfondo nero (MP4)
+        exportCanvas = document.createElement('canvas');
+        exportCanvas.width = canvas.width;
+        exportCanvas.height = canvas.height;
+        exportCtx = exportCanvas.getContext('2d');
+
+        // Disegna il primissimo frame
+        exportCtx.fillStyle = '#000000';
+        exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+        exportCtx.drawImage(canvas, 0, 0);
+
+        // 2. Crea i due flussi a 30fps
+        const streamWebm = canvas.captureStream(30);
+        const streamMp4 = exportCanvas.captureStream(30);
+
+        // 3. Inizializza Recorder WebM (Alpha/Trasparenza)
+        let optionsWebm = { mimeType: 'video/webm; codecs=vp9' };
+        try { mediaRecorderWebm = new MediaRecorder(streamWebm, optionsWebm); }
+        catch (e) { mediaRecorderWebm = new MediaRecorder(streamWebm); }
+
+        // 4. Inizializza Recorder MP4 (Sfondo Nero)
+        let optionsMp4 = { mimeType: 'video/mp4' };
+        if (!MediaRecorder.isTypeSupported('video/mp4')) {
+          optionsMp4 = { mimeType: 'video/webm; codecs=h264' };
+        }
+        try { mediaRecorderMp4 = new MediaRecorder(streamMp4, optionsMp4); }
+        catch (e) { mediaRecorderMp4 = new MediaRecorder(streamMp4); }
+
+        mediaRecorderWebm.ondataavailable = (e) => { if (e.data.size > 0) recordedChunksWebm.push(e.data); };
+        mediaRecorderMp4.ondataavailable = (e) => { if (e.data.size > 0) recordedChunksMp4.push(e.data); };
+
+        // Download WebM al termine
+        mediaRecorderWebm.onstop = () => {
+          const blob = new Blob(recordedChunksWebm, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = `pixelissimi-alpha-${currentSeed}.webm`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+        };
+
+        // Download MP4 al termine
+        mediaRecorderMp4.onstop = () => {
+          const blob = new Blob(recordedChunksMp4, { type: mediaRecorderMp4.mimeType || 'video/mp4' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = `pixelissimi-blackbg-${currentSeed}.mp4`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+
+          exportCanvas = null; // Pulizia memoria
+        };
+
+        mediaRecorderWebm.start();
+        mediaRecorderMp4.start();
+        isRecording = true;
+
+        btn.innerHTML = '<span style="color: #ff3c5e;">■ Ferma Registrazione...</span>';
+        btn.classList.add('active');
+        btn.style.borderColor = '#ff3c5e';
+
+        if (!animating) toggleAnimate();
+      } else {
+        mediaRecorderWebm.stop();
+        mediaRecorderMp4.stop();
+        isRecording = false;
+
+        btn.innerHTML = '<span>⧨ Esporta WebM + MP4</span>';
+        btn.classList.remove('active');
+        btn.style.borderColor = '';
+      }
+    }
+
+    function copySeed() {
+      navigator.clipboard.writeText(currentSeed.toString()).then(() => {
+        const btn = event.target.closest('button'), orig = btn.innerHTML;
+        btn.innerHTML = '<span>✓ Copiato!</span>'; setTimeout(() => { btn.innerHTML = orig; }, 1400);
+      });
+    }
+
+    function addHistory() {
+      const mini = document.createElement('canvas');
+      mini.width = 28; mini.height = 28; mini.className = 'history-thumb';
+      mini.title = `Seed: ${currentSeed}`;
+      const mc = mini.getContext('2d');
+      for (let r = 0; r < 28; r += 7) for (let c = 0; c < 28; c += 7) { mc.fillStyle = ((r + c) / 7) % 2 === 0 ? '#1a1a1a' : '#111'; mc.fillRect(c, r, 7, 7); }
+      mc.drawImage(canvas, 0, 0, 28, 28);
+      const saved = currentSeed;
+      mini.onclick = () => { currentSeed = saved; perlin = new Perlin(saved); document.getElementById('seedDisplay').textContent = saved; draw(0, false); };
+      const strip = document.getElementById('historyStrip');
+      strip.insertBefore(mini, strip.firstChild);
+      while (strip.children.length > 20) strip.removeChild(strip.lastChild);
+    }
+
+    // FUNZIONE AGGIUNTA PER ESPORTAZIONE MOV (FFmpeg.wasm CDN)
+    async function exportMOVWithAlpha(canvasElement, duration = 5, fps = 30) {
+      const btn = document.getElementById('btnRecordMov');
+      const originalText = btn.innerHTML;
+
+      try {
+        btn.innerHTML = '<span>⧗ Caricamento FFmpeg...</span>';
+        btn.classList.add('active');
+
+        // Importazione dinamica dai CDN
+        const { FFmpeg } = await import('https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/esm/index.js');
+        const { fetchFile } = await import('https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js');
+
+        const ffmpeg = new FFmpeg();
+
+        // Su browser, FFmpeg richiede i percorsi espliciti per il core
+        const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
+        await ffmpeg.load({
+          coreURL: await fetchFile(`${baseURL}/ffmpeg-core.js`),
+          wasmURL: await fetchFile(`${baseURL}/ffmpeg-core.wasm`),
+        });
+
+        btn.innerHTML = '<span>● Registrazione in corso...</span>';
+
+        // Assicurati che l'animazione sia attiva per registrare qualcosa di dinamico
+        if (!animating) toggleAnimate();
+
+        // Registra il canvas in WebM con alpha
+        const stream = canvasElement.captureStream(fps);
+        const recorder = new MediaRecorder(stream, {
+          mimeType: 'video/webm;codecs=vp9',
+          videoBitsPerSecond: 10000000 // 10 Mbps per alta qualità sorgente
+        });
+
+        const chunks = [];
+        recorder.ondataavailable = (e) => {
+          if (e.data.size > 0) chunks.push(e.data);
+        };
+
+        recorder.start();
+
+        // Aspetta la durata desiderata (es. 5 secondi)
+        await new Promise(resolve => setTimeout(resolve, duration * 1000));
+
+        recorder.stop();
+        await new Promise(resolve => { recorder.onstop = resolve; });
+
+        btn.innerHTML = '<span>⚙ Conversione MOV...</span>';
+
+        // Salva il WebM temporaneo nel file system virtuale di FFmpeg
+        const webmBlob = new Blob(chunks, { type: 'video/webm' });
+        const webmData = await fetchFile(webmBlob);
+        await ffmpeg.writeFile('input.webm', webmData);
+
+        // Converti in MOV con alpha (ProRes 4444)
+        await ffmpeg.exec([
+          '-i', 'input.webm',
+          '-c:v', 'prores_ks',
+          '-profile:v', '4',      // ProRes 4444 (supporta alpha)
+          '-pix_fmt', 'yuva444p10le',
+          '-movflags', '+faststart',
+          'output.mov'
+        ]);
+
+        // Recupera il file MOV ed esegui il download
+        const data = await ffmpeg.readFile('output.mov');
+        const movBlob = new Blob([data.buffer], { type: 'video/quicktime' });
+        const url = URL.createObjectURL(movBlob);
+
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `pixelissimi-alpha-${currentSeed}.mov`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+
+      } catch (error) {
+        console.error("Errore durante l'esportazione MOV:", error);
+        alert("Errore nell'esportazione. Assicurati di aver aggiunto il file coi-serviceworker.js alla repository.");
+      } finally {
+        // Ripristina il bottone
+        btn.innerHTML = originalText;
+        btn.classList.remove('active');
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); generate(); }
+      if (e.code === 'KeyE') exportPNG();
+      if (e.code === 'KeyA') toggleAnimate();
+      if (e.code === 'ArrowUp') { const s = document.getElementById('noiseScale'); s.value = Math.min(10, parseFloat(s.value) + .5); updateLabel('noiseScale', 'scaleVal'); generate(); }
+      if (e.code === 'ArrowDown') { const s = document.getElementById('noiseScale'); s.value = Math.max(.5, parseFloat(s.value) - .5); updateLabel('noiseScale', 'scaleVal'); generate(); }
+    });
+
+    window.addEventListener('resize', fitCanvas);
+    fitCanvas();
+    generate();
+  </script>
 </body>
+
 </html>
